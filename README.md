@@ -16,7 +16,6 @@ The sensors aren't directly attached to the Pi, but instead the data is collecte
 The base station is a Raspberry Pi. It uses a Bluetooth USB adapter to connect to the remote sensor.
 ###Sensor (Arduino)  
 The remote sensor is based on an Arduino Nano board. It uses a DS18B20 to measure temperature, a DHT22 for humidity an a BPM180 for air pressure. It uses a HC-05 Bluetooth module for the connection.  
-![Sensor](img/IMG_8911.JPG)
 
 ##Software
 ###Base station
@@ -60,7 +59,7 @@ To get the Arduino started wire it up and set the pin numbers in the sketch so t
 ***Note: You may can not connect the HC-05 directly to the Arduino because of the 3.3V serial level. So, if the module doesn't have a converter it will get damaged!***
 
 **6. Set up the web interface**  
-The content of the folder raspberry_pi/www must be copied in the web server directory. If you want a better looking font, you can download Open Sans here for free: http://www.fontsquirrel.com/fonts/open-sans-condensed  
+The content of the folder raspberry_pi/www must be copied in the web server directory. In the index.php page there are a few variables you have to set so that the webserver can connect to the SQL database. If you want a better looking font, you can download Open Sans here for free: http://www.fontsquirrel.com/fonts/open-sans-condensed  
 Put the fonts it in a folder named fonts in the web server directory and it will look much better.
 
 **6. Start measurement**  
