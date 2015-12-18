@@ -19,6 +19,10 @@ table = ""	#Table name
 dt = ""	#Column name for datetime
 cur = db.cursor()
 
+#Sparkfun data
+sf_public_ley = ""
+sf_priavte_key = ""
+
 #Twitter API
 consumer_key = ""
 consumer_secret = ""
@@ -86,10 +90,11 @@ def main():
 
 			#Execute main functions
 			forecast = doForecast()
+			sparkfunLogger(output)
 			logger(output, forecast)
 			if twitter:
 				if twit_counter >= 5:
-					twitter_post(data)
+					twitter_post(data, forecast)
 					twit_counter = 0
 				else:
 					twit_counter += 1
@@ -102,14 +107,30 @@ def main():
 					temp_alert(output)
 					push_time_sec = time.mktime(time.localtime())
 
-
 			print "{}{}".format(40 * "-", "\n")
+
 		except:
 			if db:
 				db.close()
 			if pushes:
 				push("Something went wrong, the connection is interrupted.")
 			sys.exit()
+
+
+def sparkfunLogger(data):
+	try:
+		data = data.split(";", 3)
+
+		conn = httplib.HTTPSConnection("data.sparkfun.com")
+		conn.request("POST", "/input/{}".format(sf_public_ley),
+		urllib.urlencode({
+	    	"temp": data[0],
+	    	"humidity": data[1],
+	    	"pressure": data[2][:-1],
+			}), { "Content-type": "application/x-www-form-urlencoded", "Connection": "close", "Phant-Private-Key": sf_priavte_key})
+		conn.getresponse()
+	except:
+		print "Log entry to Sparkfun failed"
 
 
 def logger(entry, forecast):
@@ -133,12 +154,12 @@ def logger(entry, forecast):
 		insert_data = (datetime, entry[0], entry[1], entry[2], forecast)
 		cur.execute(insert_query, insert_data)
 
-	print "Generated log entry " + time.ctime()
+	print "Generated log entry {}".format(time.ctime())
 
 
 def doForecast():
 	difference = calculateBiggestDifference()
-	forecast = ausgabe(difference)
+	forecast = chooseForecast(difference)
 	return forecast
 
 
@@ -197,50 +218,67 @@ def calculateBiggestDifference():
 		return -99
 
 
-def ausgabe(wert):
+def chooseForecast(difference):
 	#Choose weather forecast
 	#The values are set completely by instinct and observation, so feel free to improve them
-	if wert > 0 and wert < 50:
-		if wert <= 1:
+	if difference > 0 and difference < 50:
+		if difference <= 1:
 			forecast = "Stable weather conditions"
-		elif wert <= 4 and wert > 1:
+		elif difference <= 4 and difference > 1:
 			forecast = "Small weather improvement"
-		elif wert <= 7 and wert > 4:
+		elif difference <= 7 and difference > 4:
 			forecast = "Strong weather improvement"
-		elif wert > 7:
+		elif difference > 7:
 			forecast = "Extreme weather improvement"
 
-	elif wert < 0 and wert > -50:
-		if wert >= -1:
+	elif difference < 0 and difference > -50:
+		if difference >= -1:
 			forecast = "Stable weather conditions"
-		elif wert >= -4 and wert < -1:
+		elif difference >= -4 and difference < -1:
 			forecast = "Small weather deterioration"
-		elif wert >= -7 and wert < -4:
+		elif difference >= -7 and difference < -4:
 			forecast = "Strong weather deterioration"
-		elif wert < -7:
+		elif difference < -7:
 			forecast = "Extreme weather deterioration"
 
-	elif wert == 0:
+	elif difference == 0:
 		forecast = "Stable weather conditions"
 
-	elif wert == -99:
+	elif difference == -99:
 		forecast = "No forecast possible"
 
 	else:
 		forecast = "Error"
 
-	print "Pressure difference: " + str(wert)
-	print "Calculated forecast: " + forecast
+	print "Pressure difference: {}".format(difference)
+	print "Calculated forecast: {}".format(forecast)
 	return forecast
 
 
-def twitter_post(data_list):
+def twitter_post(data_list, forecast):
 	try:
 		#Compose and string and tweet it
-		post = "Temperature: " + str(data_list[0]) + "\nHumidity: " + str(data_list[1]) + "\nPressure: " + str(data_list[2])
+
+		for_twit = "No Forecast"
+		if forecast == "Stable weather conditions":
+			for_twit = "0"
+		elif forecast == "Small weather improvement":
+			for_twit = "+"
+		elif forecast == "Strong weather improvement":
+			for_twit = "++"
+		elif forecast == "Extreme weather improvement":
+			for_twit = "+++"
+		elif forecast == "Small weather deterioration":
+			for_twit = "-"
+		elif forecast == "Strong weather deterioration":
+			for_twit = "--"
+		elif forecast == "Extreme weather deterioration":
+			for_twit = "---"
+
+		post = "Temp: {}\nHum: {} \nPres: {}\nForecast: {}".format(data_list[0], data_list[1], data_list[2], for_twit)
 		twit_api.update_status(status=post)
-		twitter_minutes_remaining = 60
 		print "Twitter post successful"
+
 	except:
 		print "Twitter post failed"
 
