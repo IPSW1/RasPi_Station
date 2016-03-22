@@ -6,7 +6,7 @@ import MySQLdb
 import tweepy
 from bluetooth import *
 
-################	Configuration ###############
+################ Configuration ###############
 #Bluetooth
 mac = ''
 
@@ -28,6 +28,7 @@ consumer_key = ""
 consumer_secret = ""
 access_token = ""
 access_token_secret = ""
+location_id = '' #Twitter location ID to add location to tweets (remove in function twitter_post if not needed)
 
 #Pushover data
 push_token = ""
@@ -257,8 +258,7 @@ def chooseForecast(difference):
 
 def twitter_post(data_list, forecast):
 	try:
-		#Compose and string and tweet it
-
+		#Compose string and tweet it
 		for_twit = "No Forecast"
 		if forecast == "Stable weather conditions":
 			for_twit = "0"
@@ -276,7 +276,7 @@ def twitter_post(data_list, forecast):
 			for_twit = "---"
 
 		post = "Temp: {}\nHum: {} \nPres: {}\nForecast: {}".format(data_list[0], data_list[1], data_list[2], for_twit)
-		twit_api.update_status(status=post)
+		twit_api.update_status(status=post, place_id=location_id)
 		print "Twitter post successful"
 
 	except:
