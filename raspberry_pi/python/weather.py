@@ -224,26 +224,26 @@ def chooseForecast(difference):
 	#The values are set completely by instinct and observation, so feel free to improve them
 	if difference > 0 and difference < 50:
 		if difference <= 1:
-			forecast = "Stable weather conditions"
+			forecast = "0"
 		elif difference <= 4 and difference > 1:
-			forecast = "Small weather improvement"
+			forecast = "+"
 		elif difference <= 7 and difference > 4:
-			forecast = "Strong weather improvement"
+			forecast = "++"
 		elif difference > 7:
-			forecast = "Extreme weather improvement"
+			forecast = "+++"
 
 	elif difference < 0 and difference > -50:
 		if difference >= -1:
-			forecast = "Stable weather conditions"
+			forecast = "0"
 		elif difference >= -4 and difference < -1:
-			forecast = "Small weather deterioration"
+			forecast = "-"
 		elif difference >= -7 and difference < -4:
-			forecast = "Strong weather deterioration"
+			forecast = "--"
 		elif difference < -7:
-			forecast = "Extreme weather deterioration"
+			forecast = "---"
 
 	elif difference == 0:
-		forecast = "Stable weather conditions"
+		forecast = "0"
 
 	elif difference == -99:
 		forecast = "No forecast possible"
@@ -258,24 +258,7 @@ def chooseForecast(difference):
 
 def twitter_post(data_list, forecast):
 	try:
-		#Compose string and tweet it
-		for_twit = "No Forecast"
-		if forecast == "Stable weather conditions":
-			for_twit = "0"
-		elif forecast == "Small weather improvement":
-			for_twit = "+"
-		elif forecast == "Strong weather improvement":
-			for_twit = "++"
-		elif forecast == "Extreme weather improvement":
-			for_twit = "+++"
-		elif forecast == "Small weather deterioration":
-			for_twit = "-"
-		elif forecast == "Strong weather deterioration":
-			for_twit = "--"
-		elif forecast == "Extreme weather deterioration":
-			for_twit = "---"
-
-		post = "Temp: {}\nHum: {} \nPres: {}\nForecast: {}".format(data_list[0], data_list[1], data_list[2], for_twit)
+		post = "Temp: {}\nHum: {} \nPres: {}\nForecast: {}".format(data_list[0], data_list[1], data_list[2], forecast)
 		twit_api.update_status(status=post, place_id=location_id)
 		print "Twitter post successful"
 
