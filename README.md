@@ -20,7 +20,7 @@ The remote sensor is based on an Arduino Nano board. It uses a DS18B20 to measur
 
 ##Software
 ###Base station
-The base station runs the standard Raspbian Jessie distribution (https://www.raspberrypi.org/downloads/raspbian/). To connect to the Arduino sensor and collect the data a Python script is permanently running in the background. It receives data, writes to the SQL database (hosed on the Pi), calculates the forecast, posts to Twitter and does Push notifications.
+The base station runs the standard Raspbian Jessie distribution (https://www.raspberrypi.org/downloads/raspbian/). To connect to the Arduino sensor and collect the data a Python script is permanently running in the background. It receives data, writes it to the SQL database (hosed on the Pi), calculates the forecast and posts it to Twitter.
 Therefor it uses the following libraries:  
 * Python-MySQL (former MySQLdb) (http://mysql-python.sourceforge.net/MySQLdb.html)
 * Tweepy (https://github.com/tweepy/tweepy)
@@ -57,18 +57,16 @@ On data.sparkfun.com you can create a free stream where you can store the data. 
 and upload to your stream.
 
 **5. Prepare the script**  
-At the beginning of the main Python script (weather.py) there are a few fields in which you have to insert the MAC address for the bluetooth module, the values for the SQL database (host, username, password, database), and API data for Sparkfun, Twitter and Pushover.
+At the beginning of the main Python script (`weather.py`) there are a few fields in which you have to insert the MAC address for the bluetooth module, the values for the SQL database (host, username, password, database), and API data for Sparkfun and Twitter.
 
 **6. Get the Arduino ready**  
 To get the Arduino started wire it up and set the pin numbers in the sketch so that data can be read. The DS18B20, DHT22 and HC-05 can be connected to any digital pin, you only have to change the sketch for the appropriate pins. Then upload the sketch and you are ready. The HC-05 module can be configured with AT commands, but this should not be necessary.  
 ***Note: You may can not connect the HC-05 directly to the Arduino because of the 3.3V serial level. So, if the module doesn't have a converter it will get damaged!***
 
 **7. Set up the web interface**  
-The content of the folder raspberry_pi/www must be copied in the web server directory. In the index.php page there are a few variables you have to set so that the webserver can connect to the SQL database. If you want a better looking font, you can download Open Sans here for free: http://www.fontsquirrel.com/fonts/open-sans-condensed  
+The content of the folder `raspberry_pi/www` must be copied in the web server directory. In the `index.php` page there are a few variables you have to set so that the webserver can connect to the SQL database. If you want a better looking font, you can download Open Sans here for free: http://www.fontsquirrel.com/fonts/open-sans-condensed  
 Put the fonts it in a folder named fonts in the web server directory and it will look much better.
 
 **8. Start measurement**  
-Now you can try to get a connection to the Arduino by starting the Python script. It has three parameters:  
- * -t: Enable Twitter
- * -p: Enable push notifications over Pushover  
+Now you can try to get a connection to the Arduino by starting the Python script. To use Twitter use parameter `-t`  
 You should be able to see the output on the terminal. If everything went fine there will be incoming data within 10 minutes after starting the script. The data can be looked up by navigating to your Raspberry Pi's IP address.

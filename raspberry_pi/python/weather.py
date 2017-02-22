@@ -30,18 +30,10 @@ access_token = ""
 access_token_secret = ""
 location_id = '' #Twitter location ID to add location to tweets (remove in function twitter_post if not needed)
 
-#Pushover data
-push_token = ""
-push_user = ""
-push_title = "Weather station"
 ################################################
 
 def main():
 	twit_counter = 6
-
-	current_time_sec = 0
-	time_since_push = 0
-	push_time_sec = 0
 
 	#Establish a Bluetooth connection
 	sensor = BluetoothSocket(RFCOMM)
@@ -49,16 +41,12 @@ def main():
 	sensor.connect((mac, 1))
 	print "Connection establishment successful"
 
-	#Additional functions default states
-	pushes = False
+	#Twitter default states
 	twitter = False
 
 	#Ckeck parameters
 	for command in sys.argv:
-		if command == "-p":
-			pushes = True
-			print "Push enabled"
-		elif command == "-t":
+		if command == "-t":
 			twitter = True
 			print "Twitter enabled"
 
@@ -99,22 +87,12 @@ def main():
 					twit_counter = 0
 				else:
 					twit_counter += 1
-			if pushes:
-				current_time_sec = time.mktime(time.localtime())
-				time_since_push = current_time_sec - push_time_sec
-
-				#Send push messages only every 10 hours
-				if time_since_push >= 36000:
-					temp_alert(output)
-					push_time_sec = time.mktime(time.localtime())
 
 			print "{}{}".format(40 * "-", "\n")
 
 		except:
 			if db:
 				db.close()
-			if pushes:
-				push("Something went wrong, the connection is interrupted.")
 			sys.exit()
 
 
@@ -264,36 +242,6 @@ def twitter_post(data_list, forecast):
 
 	except:
 		print "Twitter post failed"
-
-
-def temp_alert(data):
-	part_data = data.split(";", 3)
-	temp = float(part_data[0])
-
-	#These are the values that have to be reached to get a push message
-	#Of course they can be changed, and humidity and pressure can be used
-	if temp < -10:
-		push("The temperature is under -10C")
-	elif temp < -5:
-		push("The temperature is under -5C")
-	if temp > 32:
-		push("Temperature reached 32C")
-
-
-def push(push_message):
-	#This is a slightly modified version of the sample code from Pushover
-	#Additional information: https://pushover.net/faq#library-python
-	conn = httplib.HTTPSConnection("api.pushover.net:443")
-	conn.request("POST", "/1/messages.json",
-	urllib.urlencode({
-		"token": push_token,
-		"user": push_user,
-		"title": push_title,
-		"message": push_message,
-	}), { "Content-type": "application/x-www-form-urlencoded" })
-	conn.getresponse()
-
-	print "Sent push"
 
 
 if __name__ == "__main__":
