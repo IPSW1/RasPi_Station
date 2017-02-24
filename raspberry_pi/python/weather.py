@@ -4,12 +4,8 @@ import time, sys, os
 import httplib, urllib
 import MySQLdb
 import tweepy
-from bluetooth import *
 
 ################ Configuration ###############
-#Bluetooth
-mac = ''
-
 #MySQL data
 db = MySQLdb.connect(host="",
 					user="",
@@ -34,12 +30,6 @@ location_id = '' #Twitter location ID to add location to tweets (remove in funct
 
 def main():
 	twit_counter = 6
-
-	#Establish a Bluetooth connection
-	sensor = BluetoothSocket(RFCOMM)
-	print "Establish a Bluetooth connection"
-	sensor.connect((mac, 1))
-	print "Connection establishment successful"
 
 	#Twitter default states
 	twitter = False
@@ -67,9 +57,7 @@ def main():
 			output = ''
 
 			#Receiving data until the last character is a line break
-			while receive[len(receive) - 1] != '\n':
-				receive = sensor.recv(20)
-				output = output + receive
+			
 
 			print("Received data: " + output[:-1])
 
