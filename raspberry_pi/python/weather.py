@@ -48,7 +48,7 @@ def main():
 	for command in sys.argv:
 		if command == "-t":
 			twitter = True
-			print "Twitter enabled"
+			print("Twitter enabled")
 
 	#Twitter authentification
 	global twit_api
@@ -56,7 +56,7 @@ def main():
 		auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 		auth.set_access_token(access_token, access_token_secret)
 		twit_api = tweepy.API(auth)
-		print "Twitter account linked"
+		print("Twitter account linked")
 
 	print "\n\n"
 
@@ -71,7 +71,7 @@ def main():
 				receive = sensor.recv(20)
 				output = output + receive
 
-			print "Received data: " + output[:-1]
+			print("Received data: " + output[:-1])
 
 			#Remove last character (line break) of the finished string an split the string by ';'
 			output = output[:-1]
@@ -109,7 +109,7 @@ def sparkfunLogger(data):
 			}), { "Content-type": "application/x-www-form-urlencoded", "Connection": "close", "Phant-Private-Key": sf_priavte_key})
 		conn.getresponse()
 	except:
-		print "Log entry to Sparkfun failed"
+		print("Log entry to Sparkfun failed")
 
 
 def logger(entry, forecast):
@@ -133,7 +133,7 @@ def logger(entry, forecast):
 		insert_data = (datetime, entry[0], entry[1], entry[2], forecast)
 		cur.execute(insert_query, insert_data)
 
-	print "Generated log entry {}".format(time.ctime())
+	print("Generated log entry {}".format(time.ctime()))
 
 
 def doForecast():
@@ -229,8 +229,8 @@ def chooseForecast(difference):
 	else:
 		forecast = "Error"
 
-	print "Pressure difference: {}".format(difference)
-	print "Calculated forecast: {}".format(forecast)
+	print("Pressure difference: {}".format(difference))
+	print("Calculated forecast: {}".format(forecast))
 	return forecast
 
 
@@ -238,10 +238,10 @@ def twitter_post(data_list, forecast):
 	try:
 		post = "Temp: {}\nHum: {} \nPres: {}\nForecast: {}".format(data_list[0], data_list[1], data_list[2], forecast)
 		twit_api.update_status(status=post, place_id=location_id)
-		print "Twitter post successful"
+		print("Twitter post successful")
 
 	except:
-		print "Twitter post failed"
+		print("Twitter post failed")
 
 
 if __name__ == "__main__":
