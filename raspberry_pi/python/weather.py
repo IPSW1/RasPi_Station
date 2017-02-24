@@ -2,57 +2,46 @@
 
 import time, sys, os
 import httplib, urllib
-import MySQLdb
 import tweepy
 import RPi.GPIO as GPIO
 from RF24 import *
 
 ################ Configuration ###############
-#RF24 setup
+# RF24 setup
 irq_gpio_pin = None
-pipes = [0xF1F2F3F4E1, 0xF6F7F8F9D2] #random addresses
-radio = RF24(22, 0) #create RF24 entity
+pipes = [0xF1F2F3F4E1, 0xF6F7F8F9D2] 	# random addresses
+radio = RF24(22, 0) 	# create RF24 entity
 radio.begin()
 radio.enableDynamicPayloads()
 radio.openWritingPipe(pipes[1])
 radio.openReadingPipe(1,pipes[0])
 
+# pressure history data
+pressure_history = []
+pressure_maxsize = 96
 
-#MySQL data
-db = MySQLdb.connect(host="",
-					user="",
-					passwd="",
-					db="")
-table = ""	#Table name
-dt = ""	#Column name for datetime
-cur = db.cursor()
-
-#Sparkfun data
+# sparkfun data
 sf_public_ley = ""
 sf_priavte_key = ""
 
-#Twitter API
+# twitter data
 consumer_key = ""
 consumer_secret = ""
 access_token = ""
 access_token_secret = ""
-location_id = '' #Twitter location ID to add location to tweets (remove in function twitter_post if not needed)
-
+location_id = '' 	# twitter location ID to add location to tweets (remove in function twitter_post if not needed)
+twit_counter = 6	# post intervall, corresponds to multiples of 10 minutes
+twitter = False		# default value if Twitter is enabled
 ################################################
 
 def main():
-	twit_counter = 6
-
-	#Twitter default states
-	twitter = False
-
-	#Ckeck parameters
+	# ckeck parameters
 	for command in sys.argv:
 		if command == "-t":
 			twitter = True
 			print("Twitter enabled")
 
-	#Twitter authentification
+	# twitter authentification
 	global twit_api
 	if twitter:
 		auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -74,17 +63,17 @@ def main():
 			    len = radio.getDynamicPayloadSize()
 			    receive_payload = radio.read(len)
 			    receive_payload = receive_payload.decode('utf-8')
-			    receive_payload = receive_payload.replace('\x00', '')	#filter out null characters
+			    receive_payload = receive_payload.replace('\x00', '')	# filter out null characters
 
 			print('Received data: {}'.format(receive_payload))
 
-			#Split the string by ';' to get separate values
+			# split the string by ';' to get separate values
 			data = receive_payload.split(";", 3)
 
-			#Execute main functions
-			forecast = doForecast()
-			sparkfunLogger(output)
-			logger(output, forecast)
+			# execute main functions
+			forecast = do_forecast()
+			sparkfun_logger(output)
+			new_pressure(data[2])
 			if twitter:
 				if twit_counter >= 5:
 					twitter_post(data, forecast)
@@ -99,8 +88,13 @@ def main():
 				db.close()
 			sys.exit()
 
+def new_pressure(pressure):
+	if(len(pressure_history) > maxsize - 1):
+		pressure_history.pop(0)
 
-def sparkfunLogger(data):
+	pressure_history.append(float(pressure))
+
+def sparkfun_logger(data):
 	try:
 		data = data.split(";", 3)
 
@@ -116,80 +110,41 @@ def sparkfunLogger(data):
 		print("Log entry to Sparkfun failed")
 
 
-def logger(entry, forecast):
-	entry = entry.split(";", 3)
-	datetime = time.strftime('%Y-%m-%d %H:%M:%S')
-
-	#Read out the number of entries
-	count_query = "SELECT COUNT(*) FROM {}".format(table)
-	cur.execute(count_query)
-	quantity = cur.fetchone()[0]
-
-	#Keep the number of entries at a maximum of 10000
-	if quantity >= 10000:
-		with db:
-			delete_query = "DELETE FROM {} WHERE(SELECT {} ORDER BY {}) LIMIT 1".format(table, dt, dt)
-			cur.execute(delete_query)
-
-	with db:
-		#Insert the latest data into the table
-		insert_query = "INSERT INTO {} VALUES (%s, %s, %s, %s, %s)".format(table)
-		insert_data = (datetime, entry[0], entry[1], entry[2], forecast)
-		cur.execute(insert_query, insert_data)
-
-	print("Generated log entry {}".format(time.ctime()))
-
-
-def doForecast():
-	difference = calculateBiggestDifference()
-	forecast = chooseForecast(difference)
+def do_forecast():
+	difference = calculate_biggest_difference()
+	forecast = choose_forecast(difference)
 	return forecast
 
 
-def calculateBiggestDifference():
-	try:
-		#Fetch number of entries in the table
-		count_query = "SELECT COUNT(*) FROM {}".format(table)
-		cur.execute(count_query)
-		line_number = cur.fetchone()[0]
+def calculate_biggest_difference():
+	# just do a forecast if at least 10 values recorded
+	if(len(pressure_history) > 10):
+		return -99
 
-		#Set the number of lines to read out to a maximum of 16 hours
-		if (line_number < 96):
-			readout_lines = line_number - 1
-		else:
-			readout_lines = 96
-
-		#Fetch data from table
-		with db:
-			fetch_query = "SELECT * FROM {} ORDER BY {} DESC LIMIT {}".format(table, dt, readout_lines)
-			cur.execute(fetch_query)
-			data = cur.fetchall()
-
-		#Calculate average of the last 3 values to smooth measuring errors
-		x = 0
+	else:
+		# calculate average of the last 3 values to smooth measuring errors
+		index = len(pressure_history) - 1
 		total = 0
-		while x < 3:
-			total = total + data[x][3]
-			x = x + 1
+		for i in range(0, 3)
+			total = total + pressure_history[index - i]
+		avg = total / 3
 
-		avg = total / x
-
-		#Calculate biggest difference between two values, for positive and negative values
-		i = 10
+		# calculate biggest difference between two values, for positive and negative values
+		i = len(pressure_history) - 1
 		positive_value = 0
 		negative_value = 0
 
-		while i < readout_lines:
-			difference = avg - data[i][3]
+		while i >= 0:
+			difference = avg - pressure_history[i]
 			if (difference > 0):
 				if (difference > positive_value):
 					positive_value = difference
 			elif (difference < 0):
 				if (difference < negative_value):
 					negative_value = difference
-			i = i + 2
+			i = i - 1
 
-		#Select the most significant difference
+		# select the most significant difference
 		if positive_value > -negative_value:
 			return positive_value
 		elif positive_value < -negative_value:
@@ -197,13 +152,10 @@ def calculateBiggestDifference():
 		elif positive_value == -negative_value:
 			return 0
 
-	except:
-		return -99
 
-
-def chooseForecast(difference):
-	#Choose weather forecast
-	#The values are set completely by instinct and observation, so feel free to improve them
+def choose_forecast(difference):
+	# choose weather forecast
+	# the values are set completely by instinct and observation, so feel free to improve them
 	if difference > 0 and difference < 50:
 		if difference <= 1:
 			forecast = "0"
