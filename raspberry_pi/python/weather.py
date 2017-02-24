@@ -4,8 +4,20 @@ import time, sys, os
 import httplib, urllib
 import MySQLdb
 import tweepy
+import RPi.GPIO as GPIO
+from RF24 import *
 
 ################ Configuration ###############
+#RF24 setup
+irq_gpio_pin = None
+pipes = [0xF1F2F3F4E1, 0xF6F7F8F9D2] #random addresses
+radio = RF24(22, 0) #create RF24 entity
+radio.begin()
+radio.enableDynamicPayloads()
+radio.openWritingPipe(pipes[1])
+radio.openReadingPipe(1,pipes[0])
+
+
 #MySQL data
 db = MySQLdb.connect(host="",
 					user="",
@@ -53,17 +65,21 @@ def main():
 
 	while True:
 		try:
-			receive = ' '
-			output = ''
-
-			#Receiving data until the last character is a line break
+			# do nothing if no data comes in
 			
+			while not radio.available():
+			    pass
+			# if data is availabe
+			while radio.available():
+			    len = radio.getDynamicPayloadSize()
+			    receive_payload = radio.read(len)
+			    receive_payload = receive_payload.decode('utf-8')
+			    receive_payload = receive_payload.replace('\x00', '')	#filter out null characters
 
-			print("Received data: " + output[:-1])
+			print('Received data: {}'.format(receive_payload))
 
-			#Remove last character (line break) of the finished string an split the string by ';'
-			output = output[:-1]
-			data = output.split(";", 3)
+			#Split the string by ';' to get separate values
+			data = receive_payload.split(";", 3)
 
 			#Execute main functions
 			forecast = doForecast()
