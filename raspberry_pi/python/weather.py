@@ -125,7 +125,7 @@ def calculate_biggest_difference():
 		# calculate average of the last 3 values to smooth measuring errors
 		index = len(pressure_history) - 1
 		total = 0
-		for i in range(0, 3)
+		for i in range(0, 3):
 			total = total + pressure_history[index - i]
 		avg = total / 3
 
