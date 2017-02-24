@@ -15,6 +15,7 @@ radio.begin()
 radio.enableDynamicPayloads()
 radio.openWritingPipe(pipes[1])
 radio.openReadingPipe(1,pipes[0])
+radio.startListening()
 
 # pressure history data
 pressure_history = []
@@ -30,12 +31,13 @@ consumer_secret = ""
 access_token = ""
 access_token_secret = ""
 location_id = '' 	# twitter location ID to add location to tweets (remove in function twitter_post if not needed)
-twit_counter = 6	# post intervall, corresponds to multiples of 10 minutes
-twitter = False		# default value if Twitter is enabled
 ################################################
 
 def main():
-	# ckeck parameters
+	twit_counter = 6	# post intervall, corresponds to multiples of 10 minutes
+	twitter = False		# default value if Twitter is enabled
+
+	# check parameters
 	for command in sys.argv:
 		if command == "-t":
 			twitter = True
@@ -49,47 +51,40 @@ def main():
 		twit_api = tweepy.API(auth)
 		print("Twitter account linked")
 
-	print "\n\n"
+	print("\n\n")
 
 
 	while True:
-		try:
-			# do nothing if no data comes in
-			
-			while not radio.available():
-			    pass
-			# if data is availabe
-			while radio.available():
-			    len = radio.getDynamicPayloadSize()
-			    receive_payload = radio.read(len)
-			    receive_payload = receive_payload.decode('utf-8')
-			    receive_payload = receive_payload.replace('\x00', '')	# filter out null characters
+		# do nothing if no data comes in
+		while not radio.available():
+		    pass
+		# if data is availabe
+		while radio.available():
+		    len = radio.getDynamicPayloadSize()
+		    receive_payload = radio.read(len)
+		    receive_payload = receive_payload.decode('utf-8')
+		    receive_payload = receive_payload.replace('\x00', '')	# filter out null characters
 
-			print('Received data: {}'.format(receive_payload))
+		print('Received data: {}'.format(receive_payload))
 
-			# split the string by ';' to get separate values
-			data = receive_payload.split(";", 3)
+		# split the string by ';' to get separate values
+		data = receive_payload.split(";", 3)
 
-			# execute main functions
-			forecast = do_forecast()
-			sparkfun_logger(output)
-			new_pressure(data[2])
-			if twitter:
-				if twit_counter >= 5:
-					twitter_post(data, forecast)
-					twit_counter = 0
-				else:
-					twit_counter += 1
+		# execute main functions
+		forecast = do_forecast()
+		sparkfun_logger(receive_payload)
+		new_pressure(data[2])
+		if twitter:
+			if twit_counter >= 5:
+				twitter_post(data, forecast)
+				twit_counter = 0
+			else:
+				twit_counter += 1
 
-			print "{}{}".format(40 * "-", "\n")
-
-		except:
-			if db:
-				db.close()
-			sys.exit()
+		print("{}{}".format(40 * "-", "\n"))
 
 def new_pressure(pressure):
-	if(len(pressure_history) > maxsize - 1):
+	if(len(pressure_history) > pressure_maxsize - 1):
 		pressure_history.pop(0)
 
 	pressure_history.append(float(pressure))
