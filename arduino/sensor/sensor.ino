@@ -9,7 +9,7 @@ The BMP280 must be connected to the I2C interface */
 #define DHT22_PIN 3   // DHT22
 #define CS_PIN 7  // chip select for NRF24L01
 #define CE_PIN 8  // chip enable for NRF24L01
-const uint64_t address = 0xF1F2F3F4E1LL;  // address for NRF24L01 (randomly chosen)
+const uint64_t pipe_address = 0xF1F2F3F4E1LL;  // address for NRF24L01 (randomly chosen)
 int channel = 105;   // randomly chosen channel, above of Wifi range
 
 // create entitis for the sensors and RF24
@@ -26,7 +26,7 @@ void setup() {
     radio.setDataRate(RF24_250KBPS);  // lower data rate to increase range
     radio.setChannel(channel);
     radio.enableDynamicPayloads();
-    radio.openWritingPipe(address);
+    radio.openWritingPipe(pipe_address);
     
 }
 
@@ -58,8 +58,7 @@ void loop() {
   radio.write(payload, sizeof(payload));
   
   // sleep for 10 minutes
-  //sleep();
-  delay(100);
+  sleep();
 }
 
 void sleep() {

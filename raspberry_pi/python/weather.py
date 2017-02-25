@@ -104,6 +104,9 @@ def sparkfun_logger(data):
 		    "pressure": data[2][:-1],
 		    }), { "Content-type": "application/x-www-form-urlencoded", "Connection": "close", "Phant-Private-Key": sf_priavte_key})
 		conn.getresponse()
+
+		print("Log entry to Sparkfun successful")
+
 	except:
 		print("Log entry to Sparkfun failed")
 
@@ -116,7 +119,7 @@ def do_forecast():
 
 def calculate_biggest_difference():
 	# just do a forecast if at least 10 values recorded
-	if(len(pressure_history) > 10):
+	if(len(pressure_history) < 10):
 		return -99
 
 	else:
