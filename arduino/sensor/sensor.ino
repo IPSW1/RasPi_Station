@@ -55,7 +55,9 @@ void loop() {
   sprintf(payload,"%s;%s;%s", temperaturestr, humiditystr, pressurestr);
     
   // write data to NRF24L01 module
+  radio.powerUp();
   radio.write(payload, sizeof(payload));
+  radio.powerDown();
   
   // sleep for 10 minutes
   sleep();
