@@ -1,7 +1,7 @@
 #!usr/bin/python
 
 import time, sys, os
-import httplib, urllib
+import http.client, urllib
 import tweepy
 import RPi.GPIO as GPIO
 from RF24 import *
@@ -93,13 +93,13 @@ def sparkfun_logger(data):
 	try:
 		data = data.split(";", 3)
 
-		conn = httplib.HTTPSConnection("data.sparkfun.com")
+		conn = http.client.HTTPSConnection("data.sparkfun.com")
 		conn.request("POST", "/input/{}".format(sf_public_ley),
-		urllib.urlencode({
-	    	"temp": data[0],
-	    	"humidity": data[1],
-	    	"pressure": data[2][:-1],
-			}), { "Content-type": "application/x-www-form-urlencoded", "Connection": "close", "Phant-Private-Key": sf_priavte_key})
+		urllib.parse.urlencode({
+		    "temp": data[0],
+		    "humidity": data[1],
+		    "pressure": data[2][:-1],
+		    }), { "Content-type": "application/x-www-form-urlencoded", "Connection": "close", "Phant-Private-Key": sf_priavte_key})
 		conn.getresponse()
 	except:
 		print("Log entry to Sparkfun failed")
