@@ -1,23 +1,17 @@
-#include <Wire.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <dht.h>
 #include <Adafruit_BMP280.h>
+#include <dht.h>
 #include <LowPower.h>
 #include <SPI.h>
 #include "RF24.h"
 
-/* configuration for DS18B20, DHT22 and NRF24L01
+/* configuration for DHT22 and NRF24L01
 The BMP280 must be connected to the I2C interface */
-#define ONE_WIRE_PIN 4  // DS18B20
 #define DHT22_PIN 3   // DHT22
 #define CS_PIN 7  // chip select for NRF24L01
 #define CE_PIN 8  // chip enable for NRF24L01
 const uint64_t address = 0xF1F2F3F4E1LL;  // address for NRF24L01 (randomly chosen)
 
 // create entitis for the sensors and RF24
-OneWire oneWire(ONE_WIRE_PIN);
-DallasTemperature sensors(&oneWire);
 dht DHT;
 Adafruit_BMP280 bmp;
 RF24 radio(CS_PIN, CE_PIN);
@@ -33,9 +27,8 @@ void setup() {
 }
 
 void loop() { 
-  // read temperature (DS18S20) 
-  sensors.requestTemperatures();
-  float temperature = sensors.getTempCByIndex(0);
+  // read temperature (BMP280) 
+  float temperature = bmp.readTemperature();
     
   // read humidity (DHT22)
   uint32_t start = micros();
