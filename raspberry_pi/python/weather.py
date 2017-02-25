@@ -54,9 +54,7 @@ def main():
 		twit_api = tweepy.API(auth)
 		print("Twitter account linked")
 
-	print("\n\n")
-
-
+	# main loop
 	while True:
 		# do nothing if no data comes in
 		while not radio.available():
