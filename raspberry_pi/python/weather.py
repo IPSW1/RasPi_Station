@@ -9,12 +9,15 @@ from RF24 import *
 ################ Configuration ###############
 # RF24 setup
 irq_gpio_pin = None
-pipes = [0xF1F2F3F4E1, 0xF6F7F8F9D2] 	# random addresses
+pipe_address = 0xF1F2F3F4E1 	# random addresses
 radio = RF24(22, 0) 	# create RF24 entity
+channel = 105
+
 radio.begin()
+radio.setDataRate(RF24_250KBPS);	# lower data rate to increase range
+radio.setChannel(channel);
 radio.enableDynamicPayloads()
-radio.openWritingPipe(pipes[1])
-radio.openReadingPipe(1,pipes[0])
+radio.openReadingPipe(1, pipe_address)
 radio.startListening()
 
 # pressure history data

@@ -10,6 +10,7 @@ The BMP280 must be connected to the I2C interface */
 #define CS_PIN 7  // chip select for NRF24L01
 #define CE_PIN 8  // chip enable for NRF24L01
 const uint64_t address = 0xF1F2F3F4E1LL;  // address for NRF24L01 (randomly chosen)
+int channel = 105;   // randomly chosen channel, above of Wifi range
 
 // create entitis for the sensors and RF24
 dht DHT;
@@ -17,13 +18,16 @@ Adafruit_BMP280 bmp;
 RF24 radio(CS_PIN, CE_PIN);
 
 void setup() {
-    // initialize the BMP180
+    // initialize the BMP280
     bmp.begin(0x76);
 
     // initialize RF24
     radio.begin();
+    radio.setDataRate(RF24_250KBPS);  // lower data rate to increase range
+    radio.setChannel(channel);
     radio.enableDynamicPayloads();
     radio.openWritingPipe(address);
+    
 }
 
 void loop() { 
@@ -54,7 +58,8 @@ void loop() {
   radio.write(payload, sizeof(payload));
   
   // sleep for 10 minutes
-  sleep();
+  //sleep();
+  delay(100);
 }
 
 void sleep() {
