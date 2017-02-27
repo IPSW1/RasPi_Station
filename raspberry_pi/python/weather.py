@@ -1,10 +1,23 @@
 #!usr/bin/python
 
 import time, sys, os
-import http.client, urllib
-import tweepy
 import RPi.GPIO as GPIO
 from RF24 import *
+
+# only import libraries for Twitter and Sparkfun if option enabled
+global twitter, sparkfun
+twitter = False
+sparkfun = False
+for command in sys.argv:
+	if command == "-t":
+		twitter = True
+		import tweepy
+		print("Twitter enabled")
+	if command == "-s":
+		sparkfun = True
+		import http.client, urllib
+		print("Sparkfun enabled")
+
 
 ################ Configuration ###############
 # RF24 setup
@@ -38,13 +51,8 @@ location_id = '' 	# twitter location ID to add location to tweets (remove in fun
 
 def main():
 	twit_counter = 6	# post intervall, corresponds to multiples of 10 minutes
-	twitter = False		# default value if Twitter is enabled
-
-	# check parameters
-	for command in sys.argv:
-		if command == "-t":
-			twitter = True
-			print("Twitter enabled")
+	#twitter = False		# default value for Twitter posts
+	#sparkfun = False	# default value for Sparkfun upload
 
 	# twitter authentification
 	global twit_api
@@ -73,8 +81,9 @@ def main():
 
 		# execute main functions
 		forecast = do_forecast()
-		sparkfun_logger(receive_payload)
 		new_pressure(data[2])
+		if sparkfun:
+			sparkfun_logger(receive_payload)
 		if twitter:
 			if twit_counter >= 5:
 				twitter_post(data, forecast)
