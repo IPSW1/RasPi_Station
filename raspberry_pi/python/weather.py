@@ -80,7 +80,7 @@ def main():
 		data = receive_payload.split(";", 3)
 
 		# execute main functions
-		process_new_data(data)
+		forecast = process_new_data(data)
 		if sparkfun:
 			sparkfun_logger(data)
 		if twitter:
