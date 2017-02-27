@@ -80,10 +80,10 @@ def main():
 		data = receive_payload.split(";", 3)
 
 		# execute main functions
+		process_new_data(data)
 		forecast = do_forecast()
-		new_pressure(data[2])
 		if sparkfun:
-			sparkfun_logger(receive_payload)
+			sparkfun_logger(data)
 		if twitter:
 			if twit_counter >= 5:
 				twitter_post(data, forecast)
@@ -93,22 +93,26 @@ def main():
 
 		print("{}{}".format(40 * "-", "\n"))
 
-def new_pressure(pressure):
+def process_new_data(weather_data):
+	# write new data to file
+	data_file = open("/var/www/html/current_data.txt", 'w')
+	data_string = "{};{};{}\n".format(round(float(weather_data[0])), round(float(weather_data[1])), round(float(weather_data[2])))
+	data_file.write(data_string)
+	data_file.close()
+
+	# keep track of pressure history
 	if(len(pressure_history) > pressure_maxsize - 1):
 		pressure_history.pop(0)
+	pressure_history.append(float(weather_data[2]))
 
-	pressure_history.append(float(pressure))
-
-def sparkfun_logger(data):
+def sparkfun_logger(weather_data):
 	try:
-		data = data.split(";", 3)
-
 		conn = http.client.HTTPSConnection("data.sparkfun.com")
 		conn.request("POST", "/input/{}".format(sf_public_ley),
 		urllib.parse.urlencode({
-		    "temp": data[0],
-		    "humidity": data[1],
-		    "pressure": data[2],
+		    "temp": weather_data[0],
+		    "humidity": weather_data[1],
+		    "pressure": weather_data[2],
 		    }), { "Content-type": "application/x-www-form-urlencoded", "Connection": "close", "Phant-Private-Key": sf_priavte_key})
 		conn.getresponse()
 
@@ -198,9 +202,9 @@ def choose_forecast(difference):
 	return forecast
 
 
-def twitter_post(data_list, forecast):
+def twitter_post(weather_data, forecast):
 	try:
-		post = "Temp: {}\nHum: {} \nPres: {}\nForecast: {}".format(data_list[0], data_list[1], data_list[2], forecast)
+		post = "Temp: {}\nHum: {} \nPres: {}\nForecast: {}".format(weather_data[0], weather_data[1], weather_data[2], forecast)
 		twit_api.update_status(status=post, place_id=location_id)
 		print("Twitter post successful")
 
