@@ -46,7 +46,7 @@ consumer_key = ""
 consumer_secret = ""
 access_token = ""
 access_token_secret = ""
-location_id = '' 	# twitter location ID to add location to tweets (remove in function twitter_post if not needed)
+location_id = "" # twitter location ID to add location to tweets (remove in function twitter_post if not needed)
 ################################################
 
 def main():
@@ -81,7 +81,6 @@ def main():
 
 		# execute main functions
 		process_new_data(data)
-		forecast = do_forecast()
 		if sparkfun:
 			sparkfun_logger(data)
 		if twitter:
@@ -94,6 +93,14 @@ def main():
 		print("{}{}".format(40 * "-", "\n"))
 
 def process_new_data(weather_data):
+	# keep track of pressure history
+	if(len(pressure_history) > pressure_maxsize - 1):
+		pressure_history.pop(0)
+	pressure_history.append(float(weather_data[2]))
+
+	# calculate the forecast
+	forecast = do_forecast()
+
 	# write new data to file
 	data_file = open("/var/www/html/current_data.txt", 'w')
 	formatted_data = [round(float(value)) for value in weather_data]
@@ -101,14 +108,12 @@ def process_new_data(weather_data):
 	current_time = time.strptime(time.ctime())
 	time_string = time.strftime("%d.%m.%Y - %H:%M:%S", current_time)
 	
-	data_string = "{};{};{};{}\n".format(formatted_data[0], formatted_data[1], formatted_data[2], time_string)
+	data_string = "{};{};{};{};{}\n".format(formatted_data[0], formatted_data[1], formatted_data[2], forecast, time_string)
 	data_file.write(data_string)
 	data_file.close()
 
-	# keep track of pressure history
-	if(len(pressure_history) > pressure_maxsize - 1):
-		pressure_history.pop(0)
-	pressure_history.append(float(weather_data[2]))
+	# return forecast for main loop
+	return forecast
 
 def sparkfun_logger(weather_data):
 	try:
