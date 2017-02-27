@@ -108,7 +108,7 @@ def sparkfun_logger(data):
 		urllib.parse.urlencode({
 		    "temp": data[0],
 		    "humidity": data[1],
-		    "pressure": data[2][:-1],
+		    "pressure": data[2],
 		    }), { "Content-type": "application/x-www-form-urlencoded", "Connection": "close", "Phant-Private-Key": sf_priavte_key})
 		conn.getresponse()
 
