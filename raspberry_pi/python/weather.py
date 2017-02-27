@@ -96,7 +96,12 @@ def main():
 def process_new_data(weather_data):
 	# write new data to file
 	data_file = open("/var/www/html/current_data.txt", 'w')
-	data_string = "{};{};{}\n".format(round(float(weather_data[0])), round(float(weather_data[1])), round(float(weather_data[2])))
+	formatted_data = [round(float(value)) for value in weather_data]
+	
+	current_time = time.strptime(time.ctime())
+	time_string = time.strftime("%d.%m.%Y - %H:%M:%S", current_time)
+	
+	data_string = "{};{};{};{}\n".format(formatted_data[0], formatted_data[1], formatted_data[2], time_string)
 	data_file.write(data_string)
 	data_file.close()
 
