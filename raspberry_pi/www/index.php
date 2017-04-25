@@ -51,5 +51,34 @@
 		<div class = "label">Last update: <?php echo $weather_data_arr[4];?></div>
 </div>
 
+<br></br>
+<br></br>
+
+<div align='center'>
+	<script src='http://openweathermap.org/themes/openweathermap/assets/vendor/owm/js/d3.min.js'></script><div id='openweathermap-widget'></div>
+	<script type='text/javascript'>
+
+	// your city id and api key
+	var cityId = 2950159	// example for Berlin
+	var apiKey = 'your-api-key'
+
+        window.myWidgetParam = {
+            id: 21,
+            cityid: cityId,
+            appid: apiKey,
+            units: 'metric',
+            containerid: 'openweathermap-widget',                        
+        };
+        (function() {
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.async = true;
+            script.src = 'http://openweathermap.org/themes/openweathermap/assets/vendor/owm/js/weather-widget-generator.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(script, s);
+        })();
+	</script>
+</div>
+
 </body>
 </html>
